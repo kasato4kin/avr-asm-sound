@@ -4,8 +4,8 @@
 ;
 .include	"tn2313def.inc"
 
-.def OCR1L = R10
-.def OCR1H = R11
+.def bassDivL = R10
+.def bassDivH = R11
 .def fnota = R12				; Solo note frequency
 .def dnota = R13				; Solo note duration
 .def bfreq = R14				; Bass note frequency
@@ -137,8 +137,8 @@ play:	ldi		solL, low(quart/2)
 		subi	temph, -1
 		sbci	temp, -1
 
-		mov		OCR1H, temp
-		mov		OCR1L, temph
+		mov		bassDivH, temp
+		mov		bassDivL, temph
 		
 		; Высокие ноты 1-3 октава - таймер Т0
 		; Инициализируем таймер: загружаем сразу первую ноту соло, snote см. выше
@@ -270,14 +270,14 @@ t1cmpA:
 
 		clr		temp				; Для операции сравнения ниже
 
-		sub		basL, OCR1L			; Имитация деления = > вычитаем последовательно bass до brcs
-		sbc		basM, OCR1H
+		sub		basL, bassDivL			; Имитация деления = > вычитаем последовательно bass до brcs
+		sbc		basM, bassDivH
 		sbci	basH, 0
 		
 		breq	basrec				; Берем след. ноту, если ушли в минус
 
-		cp		basL, OCR1L
-		cpc		basM, OCR1H			; Для синхрона двух треков сравниваем последний остаток с OCR1: если меньше, то след. такт не играем,
+		cp		basL, bassDivL
+		cpc		basM, bassDivH			; Для синхрона двух треков сравниваем последний остаток с OCR1: если меньше, то след. такт не играем,
 		cpc		basH, temp			; не дожидаясь отрицательного значения
 
 		brlo	l3
@@ -285,8 +285,8 @@ t1cmpA:
 		; Проверка на паузу: bfreq = 478 + 1 (см. ltone) => вывод не переключаем, сразу на выход
 		ldi		temph, high(pauseL + 1)
 		ldi		temp, low(pauseL + 1)
-		cp		OCR1L, temp
-		cpc		OCR1H, temph
+		cp		bassDivL, temp
+		cpc		bassDivH, temph
 		
 		breq	t1ext				; Проверка на паузу: 478 (см. ltone) => вывод не переключаем, сразу на выход
 
@@ -299,8 +299,8 @@ l2:		sbi		PORTB, 3
 		rjmp	t1ext
 
 l3:		
-		mov		OCR1L, basL
-		mov		OCR1H, basM
+		mov		bassDivL, basL
+		mov		bassDivH, basM
 		out		OCR1AH, basM		; Обновляем значение последнего "хвостика-остатка" в OCR1A для синхрона
 		out		OCR1AL, basL
 		rjmp	t1ext
@@ -330,8 +330,8 @@ basrec:
 		subi	temph, -1
 		sbci	temp, -1
 
-		mov		OCR1H, temp
-		mov		OCR1L, temph
+		mov		bassDivH, temp
+		mov		bassDivL, temph
 
 		mov		YL, bdur
 		ldi		ZL, low(tabz*2)
